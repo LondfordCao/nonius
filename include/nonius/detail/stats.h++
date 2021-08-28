@@ -92,20 +92,28 @@ namespace nonius {
             return std::sqrt(variance);
         }
 
+        /*
+         * @param rng是随机数引擎对象
+         * @param resample 重新采样的样本数
+         * @param first,last是原始样本的起始迭代器
+         * @param
+         * */
         template <typename URng, typename Iterator, typename Estimator>
         sample resample(URng& rng, int resamples, Iterator first, Iterator last, Estimator& estimator) {
             auto n = last - first;
-            std::uniform_int_distribution<decltype(n)> dist(0, n-1);
+            std::uniform_int_distribution<decltype(n)> dist(0, n-1);//随机数均匀分布,产生(0,n-1)之间的均匀分布
 
             sample out;
             out.reserve(resamples);
             std::generate_n(std::back_inserter(out), resamples, [n, first, &estimator, &dist, &rng] {
                 std::vector<double> resampled;
                 resampled.reserve(n);
-                std::generate_n(std::back_inserter(resampled), n, [first, &dist, &rng] { return first[dist(rng)]; });
-                return estimator(resampled.begin(), resampled.end());
+                std::generate_n(std::back_inserter(resampled), n, [first, &dist, &rng] { return first[dist(rng)]; });//从原始样本中再有放回的抽样,抽样个数与原始样本数相等，都为n
+                return estimator(resampled.begin(), resampled.end());//计算重采样的平均值、方差等统计指标
             });
-            std::sort(out.begin(), out.end());
+            //out中存放重采样样本(样本数默认10000)的estimator统计指标(可能为平均值、也可能为方差等),这些统计指标默认是遵循正态分布
+
+            std::sort(out.begin(), out.end());//将重采样的统计指标排序
             return out;
         }
 
@@ -206,6 +214,7 @@ namespace nonius {
             auto mean = &detail::mean<Iterator>;
             auto stddev = &detail::standard_deviation<Iterator>;
 
+            //该lambda表达式的形参是一个函数指针(模板函数指针)
             auto estimate = [=](double(*f)(Iterator, Iterator)) {
                 auto seed = entropy();
                 return std::async(std::launch::async, [=]{

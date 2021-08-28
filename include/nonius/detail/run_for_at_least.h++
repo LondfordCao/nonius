@@ -33,6 +33,7 @@ namespace nonius {
         template <typename Clock, typename Fun>
         TimingOf<Clock, Fun(chronometer)> measure_one(Fun&& fun, int iters, const parameters& params, std::true_type) {
             detail::chronometer_model<Clock> meter;
+            //真正的执行基准测试函数,在这里统计函数的执行时间
             auto&& result = detail::complete_invoke(fun, chronometer(meter, iters, params));
 
             return { meter.elapsed(), std::move(result), iters };

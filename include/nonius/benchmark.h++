@@ -45,7 +45,7 @@ namespace nonius {
 
         template <typename Clock>
         execution_plan<FloatDuration<Clock>> prepare(configuration cfg, parameters params, environment<FloatDuration<Clock>> env) const {
-            auto bench = fun(params);
+            auto bench = fun(params);//拷贝用户自定义的基准测试函数
             auto min_time = env.clock_resolution.mean * detail::minimum_ticks;
             auto run_time = std::max(min_time, chrono::duration_cast<decltype(min_time)>(detail::warmup_time));
             auto&& test = detail::run_for_at_least<Clock>(params, chrono::duration_cast<Duration<Clock>>(run_time), 1, bench);
